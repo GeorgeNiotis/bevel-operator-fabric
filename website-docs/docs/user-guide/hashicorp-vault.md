@@ -417,7 +417,7 @@ kubectl create secret generic vault-token --from-literal=token=my-dev-root-token
 
 ```bash
 # this needs to be accessible from the cluster
-export VAULT_ADDR="http://192.168.0.20:8200"
+export VAULT_ADDR="http://vault-dev.orb.local:8200"
 
 kubectl hlf peer create \
     --statedb=leveldb \
@@ -449,12 +449,44 @@ kubectl hlf peer create \
 
 
 kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
+#peer1
+kubectl hlf peer create \
+    --statedb=leveldb \
+    --image=$PEER_IMAGE \
+    --version=$PEER_VERSION \
+    --storage-class=$SC_NAME \
+    --enroll-id=peer \
+    --mspid=Org1MSP \
+    --enroll-pw=peerpw \
+    --capacity=5Gi \
+    --name=org1-peer1 \
+    --hosts=peer1-org1.localho.st \
+    --istio-port=443 \
+    --credential-store=vault \
+    --vault-address="$VAULT_ADDR" \
+    --vault-token-secret="vault-token" \
+    --vault-token-secret-namespace="default" \
+    --vault-token-secret-key="token" \
+    --vault-pki-path="pki" \
+    --vault-role="peer-sign" \
+    --vault-ttl="8760h" \
+    --tls-vault-address="$VAULT_ADDR" \
+    --tls-vault-token-secret="vault-token" \
+    --tls-vault-token-secret-namespace="default" \
+    --tls-vault-token-secret-key="token" \
+    --tls-vault-pki-path="pki" \
+    --tls-vault-role="peer-tls" \
+    --tls-vault-ttl="8760h"
+
+
+kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
 ```
 
 Check that the peer is deployed and works:
 
 ```bash
 openssl s_client -connect peer0-org1.localho.st:443
+openssl s_client -connect peer1-org1.localho.st:443
 ```
 
 ## Deploy an `Orderer` organization
@@ -582,7 +614,7 @@ vault write pki_orderer/roles/admin-tls \
 
 ```bash
 
-export VAULT_ADDR="http://192.168.0.20:8200"
+export VAULT_ADDR="http://vault-dev.orb.local:8200"
 export VAULT_TOKEN_NAME="vault-token"
 export VAULT_TOKEN_NS="default"
 export VAULT_TOKEN_KEY="token"
@@ -917,6 +949,8 @@ spec:
   anchorPeers:
     - host: peer0-org1.localho.st
       port: 443
+    - host: peer1-org1.localho.st
+      port: 443
   hlfIdentity:
     secretKey: user.yaml
     secretName: org1-admin
@@ -930,6 +964,8 @@ ${ORDERER0_TLS_CERT}
       url: grpcs://orderer0-ord.localho.st:443
   peersToJoin:
     - name: org1-peer0
+      namespace: default
+    - name: org1-peer1
       namespace: default
 EOF
 
@@ -992,9 +1028,13 @@ tar cfz chaincode.tgz metadata.json code.tar.gz
 export PACKAGE_ID=$(kubectl hlf chaincode calculatepackageid --path=chaincode.tgz --language=node --label=$CHAINCODE_LABEL)
 echo "PACKAGE_ID=$PACKAGE_ID"
 
+#peer0
 kubectl hlf chaincode install --path=./chaincode.tgz \
     --config=org1.yaml --language=golang --label=$CHAINCODE_LABEL --user=org1-admin-default --peer=org1-peer0.default
 
+#peer1
+kubectl hlf chaincode install --path=./chaincode.tgz \
+    --config=org1.yaml --language=golang --label=$CHAINCODE_LABEL --user=org1-admin-default --peer=org1-peer1.default
 ```
 
 
@@ -1013,14 +1053,25 @@ kubectl hlf externalchaincode sync --image=kfsoftware/chaincode-external:latest 
 
 ## Check installed chaincodes
 ```bash
+#peer0
 kubectl hlf chaincode queryinstalled --config=org1.yaml --user=org1-admin-default --peer=org1-peer0.default
+
+#peer1
+kubectl hlf chaincode queryinstalled --config=org1.yaml --user=org1-admin-default --peer=org1-peer1.default
 ```
 
 ## Approve chaincode
 ```bash
 export SEQUENCE=1
 export VERSION="1.0"
+#peer0
 kubectl hlf chaincode approveformyorg --config=org1.yaml --user=org1-admin-default --peer=org1-peer0.default \
+    --package-id=$PACKAGE_ID \
+    --version "$VERSION" --sequence "$SEQUENCE" --name=asset \
+    --policy="OR('Org1MSP.member')" --channel=demo
+
+#peer1
+kubectl hlf chaincode approveformyorg --config=org1.yaml --user=org1-admin-default --peer=org1-peer1.default \
     --package-id=$PACKAGE_ID \
     --version "$VERSION" --sequence "$SEQUENCE" --name=asset \
     --policy="OR('Org1MSP.member')" --channel=demo
@@ -1042,6 +1093,11 @@ kubectl hlf chaincode invoke --config=org1.yaml \
     --user=org1-admin-default --peer=org1-peer0.default \
     --chaincode=asset --channel=demo \
     --fcn=initLedger -a '[]'
+
+kubectl hlf chaincode invoke --config=org1.yaml \
+    --user=org1-admin-default --peer=org1-peer1.default \
+    --chaincode=asset --channel=demo \
+    --fcn=initLedger -a '[]'
 ```
 
 ## Query assets in the channel
@@ -1051,15 +1107,20 @@ kubectl hlf chaincode query --config=org1.yaml \
     --user=org1-admin-default --peer=org1-peer0.default \
     --chaincode=asset --channel=demo \
     --fcn=GetAllAssets -a '[]'
+
+kubectl hlf chaincode query --config=org1.yaml \
+    --user=org1-admin-default --peer=org1-peer1.default \
+    --chaincode=asset --channel=demo \
+    --fcn=GetAllAssets -a '[]'
 ```
 
 
 At this point, you should have:
 
 - Ordering service with 1 nodes and a CA
-- Peer organization with a peer and a CA
+- Peer organization with 2 peers and a CA
 - A channel **demo**
-- A chaincode install in peer0
+- A chaincode install in peer0 and peer1
 - A chaincode approved and committed
 
 If something went wrong or didn't work, please, open an issue.
