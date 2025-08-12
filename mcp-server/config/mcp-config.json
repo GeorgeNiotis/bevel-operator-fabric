@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hyperledger-bevel-mcp-server": {
+      "command": "node",
+      "args": ["src/index.js"],
+      "cwd": "./mcp-server",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}

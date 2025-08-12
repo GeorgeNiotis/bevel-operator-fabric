@@ -1,0 +1,37 @@
+{
+  "name": "hyperledger-bevel-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Kubernetes and Hyperledger Bevel Operator management",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node test/simple-test.js",
+    "setup": "./scripts/setup.sh"
+  },
+  "keywords": [
+    "mcp",
+    "kubernetes",
+    "hyperledger",
+    "fabric",
+    "bevel",
+    "operator"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "@kubernetes/client-node": "^0.21.0",
+    "yaml": "^2.3.4",
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

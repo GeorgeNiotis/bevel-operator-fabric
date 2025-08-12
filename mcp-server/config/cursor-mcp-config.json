@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hyperledger-bevel": {
+      "command": "node",
+      "args": ["src/index.js"],
+      "cwd": "/Users/georgeniotis/Documents/bevel-operator-fabric/mcp-server",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
