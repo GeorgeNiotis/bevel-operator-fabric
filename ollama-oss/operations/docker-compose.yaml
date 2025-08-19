@@ -6,12 +6,15 @@ volumes:
 
 networks:
   oss_demo:
+    driver: bridge
 
 services:
   postgres-oss:
     image: postgres:16-alpine
     networks: ['oss_demo']
     restart: unless-stopped
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: n8n
       POSTGRES_PASSWORD: n8n
@@ -34,6 +37,17 @@ services:
       DB_POSTGRESDB_PASSWORD: n8n
       N8N_ENCRYPTION_KEY: a_secure_encryption_key
       N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
+      # Kubernetes configuration
+      K8S_SKIP_TLS_VERIFY: "true"
+      KUBERNETES_SKIP_TLS_VERIFY: "true"
+      DOCKER_CONTAINER: "true"
+      # Set to "true" only for debugging MCP issues
+      MCP_DEBUG: "false"
     volumes:
       - n8n_oss_storage:/home/node/.n8n
       - ../../mcp-server:/home/mcp-server
+      # Mount kubectl config from host
+      - ${HOME}/.kube:/home/node/.kube:ro
+    # Add extra hosts to access host services
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

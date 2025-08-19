@@ -42,6 +42,29 @@ A comprehensive Model Context Protocol (MCP) server for managing Kubernetes clus
 - **Manifest Application**: Apply Kubernetes manifests (with dry-run support)
 - **Health Reporting**: Generate comprehensive network health reports
 
+## 🆕 Recent Updates
+
+### Package Updates & Code Improvements
+- **Updated Dependencies**: All packages updated to latest stable versions
+  - `@modelcontextprotocol/sdk`: Updated to v1.0.0
+  - `@kubernetes/client-node`: Updated to v1.0.0
+  - `commander`: Updated to v12.1.0
+  - `chalk`: Updated to v5.3.0
+  - `inquirer`: Updated to v12.0.0
+  - `nodemon`: Updated to v3.1.7
+
+### Code Quality Improvements
+- **Enhanced Error Handling**: Better error recovery for Kubernetes API calls
+- **Improved Context Detection**: More robust Kubernetes context and namespace handling
+- **Tool Validation**: Added proper input schema validation for MCP tools
+- **Fallback Logic**: Added fallback namespace detection for operator discovery
+- **Test Coverage**: Added comprehensive MCP server testing script
+
+### New Features
+- **MCP Test Script**: Run `npm run test-mcp` to validate server functionality
+- **Enhanced Logging**: Better error reporting and debugging information
+- **Improved Compatibility**: Better compatibility with different Kubernetes distributions
+
 ## Installation
 
 1. **Prerequisites**:

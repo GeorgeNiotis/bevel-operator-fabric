@@ -15,12 +15,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabriccas'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabriccas'
+        });
         
         const cas = k8sClient.handleApiResponse(response);
         return {
@@ -60,13 +60,13 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricpeers'
-        );
-        
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricpeers'
+        });
+
         const peers = k8sClient.handleApiResponse(response);
         return {
           namespace,
@@ -105,12 +105,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricorderers'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricorderers'
+        });
         
         const orderers = k8sClient.handleApiResponse(response);
         return {
@@ -149,12 +149,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricorderernodes'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricorderernodes'
+        });
         
         const ordnodes = k8sClient.handleApiResponse(response);
         return {
@@ -194,12 +194,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricmainchannels'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricmainchannels'
+        });
         
         const channels = k8sClient.handleApiResponse(response);
         return {
@@ -238,12 +238,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricfollowerchannels'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricfollowerchannels'
+        });
         
         const channels = k8sClient.handleApiResponse(response);
         return {
@@ -283,12 +283,12 @@ export function registerHyperledgerTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          'fabricchaincodes'
-        );
+        const response = await k8sClient.customObjectsApi.listNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: 'fabricchaincodes'
+        });
         
         const chaincodes = k8sClient.handleApiResponse(response);
         return {
@@ -348,13 +348,13 @@ export function registerHyperledgerTools(tools, k8sClient) {
         };
         
         const plural = pluralMap[args.type] || args.type;
-        const response = await k8sClient.customObjectsApi.getNamespacedCustomObject(
-          'hlf.kungfusoftware.es',
-          'v1alpha1',
-          namespace,
-          plural,
-          args.name
-        );
+        const response = await k8sClient.customObjectsApi.getNamespacedCustomObject({
+          group: 'hlf.kungfusoftware.es',
+          version: 'v1alpha1',
+          namespace: namespace,
+          plural: plural,
+          name: args.name
+        });
         
         const resource = k8sClient.handleApiResponse(response);
         return {
@@ -386,28 +386,50 @@ export function registerHyperledgerTools(tools, k8sClient) {
         const namespace = args.namespace || 'hlf-operator';
         
         // Check for operator deployment
-        const deploymentResponse = await k8sClient.appsV1Api.listNamespacedDeployment(
-          namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          'app.kubernetes.io/name=hlf-operator'
-        );
+        let deployments = { items: [] };
+        let pods = { items: [] };
         
-        const deployments = k8sClient.handleApiResponse(deploymentResponse);
+        try {
+          const deploymentResponse = await k8sClient.appsV1Api.listNamespacedDeployment({
+            namespace: namespace,
+            labelSelector: 'app.kubernetes.io/name=hlf-operator'
+          });
+          deployments = k8sClient.handleApiResponse(deploymentResponse);
+        } catch (deploymentError) {
+          // Namespace might not exist, try default namespace
+          if (namespace !== 'default') {
+            try {
+              const deploymentResponse = await k8sClient.appsV1Api.listNamespacedDeployment({
+                namespace: 'default',
+                labelSelector: 'app.kubernetes.io/name=hlf-operator'
+              });
+              deployments = k8sClient.handleApiResponse(deploymentResponse);
+            } catch (defaultError) {
+              console.error('No operator deployments found in hlf-operator or default namespace');
+            }
+          }
+        }
         
-        // Check for operator pods
-        const podResponse = await k8sClient.coreV1Api.listNamespacedPod(
-          namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          'app.kubernetes.io/name=hlf-operator'
-        );
-        
-        const pods = k8sClient.handleApiResponse(podResponse);
+        try {
+          const podResponse = await k8sClient.coreV1Api.listNamespacedPod({
+            namespace: namespace,
+            labelSelector: 'app.kubernetes.io/name=hlf-operator'
+          });
+          pods = k8sClient.handleApiResponse(podResponse);
+        } catch (podError) {
+          // Namespace might not exist, try default namespace
+          if (namespace !== 'default') {
+            try {
+              const podResponse = await k8sClient.coreV1Api.listNamespacedPod({
+                namespace: 'default',
+                labelSelector: 'app.kubernetes.io/name=hlf-operator'
+              });
+              pods = k8sClient.handleApiResponse(podResponse);
+            } catch (defaultError) {
+              console.error('No operator pods found in hlf-operator or default namespace');
+            }
+          }
+        }
         
         return {
           namespace,

@@ -230,17 +230,26 @@ export function registerUtilityTools(tools, k8sClient) {
             break;
           case 'fabricpeers':
             response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-              'hlf.kungfusoftware.es', 'v1alpha1', namespace, 'fabricpeers'
+              'hlf.kungfusoftware.es', // group
+              'v1alpha1', // version
+              namespace, // namespace
+              'fabricpeers' // plural
             );
             break;
           case 'fabriccas':
             response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-              'hlf.kungfusoftware.es', 'v1alpha1', namespace, 'fabriccas'
+              'hlf.kungfusoftware.es', // group
+              'v1alpha1', // version
+              namespace, // namespace
+              'fabriccas' // plural
             );
             break;
           case 'fabricorderers':
             response = await k8sClient.customObjectsApi.listNamespacedCustomObject(
-              'hlf.kungfusoftware.es', 'v1alpha1', namespace, 'fabricorderers'
+              'hlf.kungfusoftware.es', // group
+              'v1alpha1', // version
+              namespace, // namespace
+              'fabricorderers' // plural
             );
             break;
           default:

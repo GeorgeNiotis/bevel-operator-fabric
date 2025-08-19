@@ -5,7 +5,13 @@ export function registerKubernetesTools(tools, k8sClient) {
     description: 'Test connection to Kubernetes cluster and get basic info',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        random_string: {
+          type: 'string',
+          description: 'Dummy parameter for no-parameter tools'
+        }
+      },
+      required: ['random_string']
     },
     handler: async () => {
       return await k8sClient.testConnection();
@@ -18,7 +24,13 @@ export function registerKubernetesTools(tools, k8sClient) {
     description: 'List all namespaces in the cluster',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        random_string: {
+          type: 'string',
+          description: 'Dummy parameter for no-parameter tools'
+        }
+      },
+      required: ['random_string']
     },
     handler: async () => {
       try {
@@ -64,7 +76,10 @@ export function registerKubernetesTools(tools, k8sClient) {
           options.labelSelector = args.labelSelector;
         }
 
-        const response = await k8sClient.coreV1Api.listNamespacedPod(namespace, undefined, undefined, undefined, undefined, options.labelSelector);
+        const response = await k8sClient.coreV1Api.listNamespacedPod({
+          namespace: namespace,
+          labelSelector: options.labelSelector
+        });
         const pods = k8sClient.handleApiResponse(response);
         
         return {
@@ -110,7 +125,10 @@ export function registerKubernetesTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.coreV1Api.readNamespacedPod(args.name, namespace);
+        const response = await k8sClient.coreV1Api.readNamespacedPod({
+          name: args.name,
+          namespace: namespace
+        });
         const pod = k8sClient.handleApiResponse(response);
         
         return {
@@ -161,7 +179,9 @@ export function registerKubernetesTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.coreV1Api.listNamespacedService(namespace);
+        const response = await k8sClient.coreV1Api.listNamespacedService({
+          namespace: namespace
+        });
         const services = k8sClient.handleApiResponse(response);
         
         return {
@@ -200,7 +220,9 @@ export function registerKubernetesTools(tools, k8sClient) {
     handler: async (args) => {
       try {
         const namespace = args.namespace || k8sClient.getCurrentNamespace();
-        const response = await k8sClient.appsV1Api.listNamespacedDeployment(namespace);
+        const response = await k8sClient.appsV1Api.listNamespacedDeployment({
+          namespace: namespace
+        });
         const deployments = k8sClient.handleApiResponse(response);
         
         return {
@@ -264,18 +286,13 @@ export function registerKubernetesTools(tools, k8sClient) {
           options.container = args.container;
         }
 
-        const response = await k8sClient.coreV1Api.readNamespacedPodLog(
-          args.name,
-          namespace,
-          options.container,
-          options.follow,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          options.tailLines
-        );
+        const response = await k8sClient.coreV1Api.readNamespacedPodLog({
+          name: args.name,
+          namespace: namespace,
+          container: options.container,
+          follow: options.follow,
+          tailLines: options.tailLines
+        });
         
         return {
           podName: args.name,
