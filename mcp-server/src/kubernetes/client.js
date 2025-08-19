@@ -4,12 +4,24 @@ import { join } from 'path';
 
 export class KubernetesClient {
   constructor() {
+    this.disabled = process.env.K8S_DISABLED === 'true';
+    
+    if (this.disabled) {
+      console.warn('Kubernetes client disabled via K8S_DISABLED environment variable');
+      return;
+    }
+    
     this.kc = new k8s.KubeConfig();
     this.initializeConfig();
     this.setupClients();
   }
 
   initializeConfig() {
+    if (this.disabled) {
+      console.log('Kubernetes client disabled - skipping configuration');
+      return;
+    }
+    
     try {
       // Try to load from default locations
       this.kc.loadFromDefault();
@@ -18,7 +30,16 @@ export class KubernetesClient {
       this.configureTLSSettings();
     } catch (error) {
       console.error('Failed to load Kubernetes config:', error.message);
-      throw new Error('Unable to initialize Kubernetes client. Please ensure kubectl is configured.');
+      
+      // Check if we're in Docker and suggest solutions
+      if (process.env.DOCKER_CONTAINER === 'true') {
+        console.error('Running in Docker container. To fix Kubernetes connectivity:');
+        console.error('1. Mount your kubeconfig: add "- ~/.kube:/app/.kube:ro" to volumes in docker-compose.yml');
+        console.error('2. Or disable Kubernetes: set K8S_DISABLED=true environment variable');
+        console.error('3. Or skip TLS verification: set K8S_SKIP_TLS_VERIFY=true');
+      }
+      
+      throw new Error('Unable to initialize Kubernetes client. Please ensure kubectl is configured or set K8S_DISABLED=true.');
     }
   }
 
@@ -87,6 +108,11 @@ export class KubernetesClient {
   }
 
   setupClients() {
+    if (this.disabled) {
+      console.log('Kubernetes client disabled - skipping client setup');
+      return;
+    }
+    
     // Core API client
     this.coreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
     
@@ -104,10 +130,13 @@ export class KubernetesClient {
   }
 
   getCurrentContext() {
+    if (this.disabled) return 'disabled';
     return this.kc.getCurrentContext();
   }
 
   getCurrentCluster() {
+    if (this.disabled) return 'disabled';
+    
     const currentContext = this.kc.getCurrentContext();
     if (!currentContext) return null;
     
@@ -124,6 +153,8 @@ export class KubernetesClient {
   }
 
   getCurrentNamespace() {
+    if (this.disabled) return 'disabled';
+    
     const currentContext = this.kc.getCurrentContext();
     if (!currentContext) return 'default';
     
@@ -140,6 +171,13 @@ export class KubernetesClient {
   }
 
   async testConnection() {
+    if (this.disabled) {
+      return {
+        success: false,
+        error: 'Kubernetes client is disabled via K8S_DISABLED environment variable'
+      };
+    }
+    
     try {
       const response = await this.coreV1Api.listNamespace();
       const body = this.handleApiResponse(response);

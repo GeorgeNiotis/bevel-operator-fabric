@@ -1,0 +1,38 @@
+services:
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: operations/Dockerfile
+    container_name: hyperledger-bevel-mcp-server
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DOCKER_CONTAINER=true
+      - K8S_DISABLED=true
+      # Enable debug for troubleshooting
+      # - MCP_DEBUG=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:3000/mcp', (res) => { process.exit(res.statusCode === 405 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oss_demo
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  oss_demo:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+# volumes:
+#   mcp-data:
+#     driver: local

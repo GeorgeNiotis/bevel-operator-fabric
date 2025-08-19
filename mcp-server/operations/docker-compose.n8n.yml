@@ -45,7 +45,6 @@ services:
       MCP_DEBUG: "false"
     volumes:
       - n8n_oss_storage:/home/node/.n8n
-      - ../../mcp-server:/home/mcp-server
       # Mount kubectl config from host
       - ${HOME}/.kube:/home/node/.kube:ro
     # Add extra hosts to access host services

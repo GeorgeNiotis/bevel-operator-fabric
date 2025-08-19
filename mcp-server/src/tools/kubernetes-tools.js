@@ -1,3 +1,14 @@
+// Helper function to check if Kubernetes client is available
+function checkK8sAvailable(k8sClient) {
+  if (k8sClient.disabled) {
+    return {
+      success: false,
+      error: 'Kubernetes functionality is disabled. Set K8S_DISABLED=false or mount kubeconfig to enable.'
+    };
+  }
+  return null;
+}
+
 export function registerKubernetesTools(tools, k8sClient) {
   // Test Kubernetes connection
   tools.set('k8s-test-connection', {
@@ -33,6 +44,9 @@ export function registerKubernetesTools(tools, k8sClient) {
       required: ['random_string']
     },
     handler: async () => {
+      const k8sCheck = checkK8sAvailable(k8sClient);
+      if (k8sCheck) return k8sCheck;
+      
       try {
         const response = await k8sClient.coreV1Api.listNamespace();
         const namespaces = k8sClient.handleApiResponse(response);

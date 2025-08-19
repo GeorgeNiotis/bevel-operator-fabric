@@ -1,0 +1,71 @@
+services:
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: operations/Dockerfile
+    container_name: hyperledger-bevel-mcp-server
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DOCKER_CONTAINER=true
+      # Kubernetes configuration for OrbStack
+      - KUBECONFIG=/app/.kube/config
+      - K8S_SKIP_TLS_VERIFY=true
+      - MCP_DEBUG=true
+      # 
+      # For local development without Kubernetes:
+      # - K8S_DISABLED=true
+    volumes:
+      # Mount kubeconfig for Kubernetes access 
+      - ~/.kube:/app/.kube:ro
+      
+      # Mount config files (optional)
+      # - ../config:/app/config:ro
+      
+      # Development volume mounts (uncomment for development)
+      # - ../src:/app/src:ro
+      # - ../package.json:/app/package.json:ro
+    # Add extra hosts to access OrbStack Kubernetes cluster
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:3000/mcp', (res) => { process.exit(res.statusCode === 405 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oss_demo
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Add a reverse proxy (nginx) for SSL termination
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: mcp-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - mcp-server
+  #   restart: unless-stopped
+  #   networks:
+  #     - mcp-network
+
+networks:
+  oss_demo:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+# volumes:
+#   mcp-data:
+#     driver: local
