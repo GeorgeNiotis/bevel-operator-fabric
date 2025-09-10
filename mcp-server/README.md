@@ -49,7 +49,6 @@ A comprehensive Model Context Protocol (MCP) server for managing Kubernetes clus
   - `@modelcontextprotocol/sdk`: Updated to v1.0.0
   - `@kubernetes/client-node`: Updated to v1.0.0
   - `commander`: Updated to v12.1.0
-  - `chalk`: Updated to v5.3.0
   - `inquirer`: Updated to v12.0.0
   - `nodemon`: Updated to v3.1.7
 

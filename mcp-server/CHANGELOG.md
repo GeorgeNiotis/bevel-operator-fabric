@@ -62,7 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - @kubernetes/client-node: ^0.21.0
 - yaml: ^2.3.4
 - commander: ^11.1.0
-- chalk: ^5.3.0
 - inquirer: ^9.2.12
 
 ### Requirements
